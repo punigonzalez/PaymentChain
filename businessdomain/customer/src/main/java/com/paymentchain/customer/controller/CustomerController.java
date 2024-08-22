@@ -2,6 +2,7 @@ package com.paymentchain.customer.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.paymentchain.customer.entities.Customer;
+import com.paymentchain.customer.entities.CustomerProduct;
 import com.paymentchain.customer.repository.CustomerRepository;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.epoll.EpollChannelOption;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 public class CustomerController {
 
     @Autowired
-    CustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
 
     private final WebClient.Builder webClientBuilder;
 
@@ -94,20 +95,35 @@ public class CustomerController {
     return ResponseEntity.ok().build();
 }
 
-private String getProductName(Long id){
-         WebClient build = webClientBuilder
-                 .clientConnector(new ReactorClientHttpConnector(client))
-                 .baseUrl("http://localhost:8083/product")
-                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                 .defaultUriVariables(Collections.singletonMap("url","http://localhost:8083/product"))
-                 .build();
 
-    JsonNode block = build.method(HttpMethod.GET).uri("/"+id)
-            .retrieve().bodyToMono(JsonNode.class).block();
+    //metodo que devuelve solo el nombre de un producto pasado por id
+    private String getProductName(Long id) {
+        WebClient build = webClientBuilder
+                .clientConnector(new ReactorClientHttpConnector(client))
+                .baseUrl("http://localhost:8081/product")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultUriVariables(Collections.singletonMap("url", "http://localhost:8081/product"))
+                .build();
 
-    String name = block.get("name").asText();
-    return name;
+        JsonNode block = build.method(HttpMethod.GET).uri("/" + id)
+                .retrieve().bodyToMono(JsonNode.class).block();
+
+        String name = block.get("name").asText();
+        return name;
     }
+
+    //BUSCAR CLIENTE POR CODIGO
+        @GetMapping("/full")
+        @Operation(summary = "Buscar cliente por codigo")
+        public Customer getByCode(@RequestParam ("code") String code){
+           Customer customer = customerRepository.findByCode(code);
+           List<CustomerProduct>products = customer.getProducts();
+           products.forEach(x->{
+               String productName=getProductName(x.getId());
+               x.setProductName(productName);
+             });
+           return customer;
+       }
 
 
 

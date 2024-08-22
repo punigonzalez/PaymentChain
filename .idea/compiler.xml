@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="transactions" />
         <module name="product" />
         <module name="customer" />
       </profile>
@@ -16,6 +17,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="customer" options="" />
       <module name="product" options="" />
+      <module name="transactions" options="" />
     </option>
   </component>
 </project>
