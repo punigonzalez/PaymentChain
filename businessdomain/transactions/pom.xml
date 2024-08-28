@@ -9,28 +9,13 @@
 	</parent>
 
 
-	<groupId>com.paymentchain</groupId>
+
 	<artifactId>transactions</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>transactions</name>
 	<description>Demo project for Spring Boot</description>
 
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+
 
 </project>

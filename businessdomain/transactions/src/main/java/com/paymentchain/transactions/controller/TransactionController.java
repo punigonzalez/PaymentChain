@@ -21,6 +21,7 @@ public class TransactionController {
     @Autowired
     private TransactionRepository transactionRepository;
 
+
     // devuelve todas las transacciones en una lista
     @GetMapping
     public List<Transaction> getTransactions(){
@@ -33,6 +34,29 @@ public class TransactionController {
         return transactionRepository.findById(id);
     }
 
+    @GetMapping("/customer/transactions")
+    public List<Transaction> get(@RequestParam(name="accountIban") String accountIban) {
+        return transactionRepository.findByAccountIban(accountIban);
+    }
+
+    //editar una transaccion por id
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editById(@PathVariable (name="id") Long id, @RequestBody Transaction input) {
+        Transaction find = transactionRepository.findById(id).get();
+        if (find != null) {
+            find.setAmount(input.getAmount());
+            find.setChannel(input.getChannel());
+            find.setDate(input.getDate());
+            find.setDescription(input.getDescription());
+            find.setFee(input.getFee());
+            find.setAccountIban(input.getAccountIban());
+            find.setReference(input.getReference());
+            find.setStatus(input.getStatus());
+        }
+        Transaction save = transactionRepository.save(find);
+        return ResponseEntity.ok(save);
+    }
+
     //crear una transaccion
     @PostMapping
     public ResponseEntity<?> createTransaction(@RequestBody Transaction input){
@@ -40,8 +64,13 @@ public class TransactionController {
         return ResponseEntity.ok(save);
     }
 
-
-    //editar una transaccion
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
+        Optional<Transaction> findById = transactionRepository.findById(id);
+        if(findById.get() != null){
+            transactionRepository.delete(findById.get());
+        }
+        return ResponseEntity.ok().build();
+    }
 
 }

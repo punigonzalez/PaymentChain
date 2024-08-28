@@ -11,6 +11,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,19 +57,21 @@ public class CustomerController {
 
 
 
-
+    // devolver lista de clientes
     @GetMapping
     @Operation(summary = "Lista de clientes")
     public List<Customer> list(){
         return customerRepository.findAll();
     }
 
+    // devolver cliente por id
     @GetMapping("/{id}")
     @Operation(summary = "Buscar cliente por id")
     public Optional<Customer> get(@PathVariable ("id") Long id){
         return customerRepository.findById(id);
     }
 
+    // editar cliente por id
     @PutMapping("/{id}")
     @Operation(summary = "Editar cliente por id")
     public ResponseEntity<?> put(@PathVariable ("id") Long id, @RequestBody Customer input){
@@ -77,6 +80,7 @@ public class CustomerController {
 
     }
 
+    // crear cliente
     @PostMapping
     @Operation(summary = "Crear cliente")
     public ResponseEntity<?> post(@RequestBody Customer input){
@@ -85,6 +89,7 @@ public class CustomerController {
     return ResponseEntity.ok(save);
     }
 
+    // eliminar cliente por id
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar cliente por id")
     public ResponseEntity<?> delete(@PathVariable ("id") Long id){
@@ -95,6 +100,33 @@ public class CustomerController {
     return ResponseEntity.ok().build();
 }
 
+    //BUSCAR CLIENTE POR CODIGO
+    @GetMapping("/full")
+    @Operation(summary = "Buscar cliente por codigo")
+    public Customer getByCode(@RequestParam(name = "code") String code) {
+        Customer customer = customerRepository.findByCode(code);
+        if (customer != null) {
+            List<CustomerProduct> products = customer.getProducts();
+
+            //for each product find it name
+            products.forEach(x -> {
+                String productName = getProductName(x.getProductId());
+                x.setProductName(productName);
+            });
+            //find all transactions that belong this account number
+            List<?> transactions = getTransactions(customer.getIban());
+            customer.setTransactions(transactions);
+
+        }
+        return customer;
+    }
+
+    /**
+     * Call Product Microservice , find a product by Id and return it name
+     *
+     * @param id of product to find
+     * @return name of product if it was find
+     */
 
     //metodo que devuelve solo el nombre de un producto pasado por id
     private String getProductName(Long id) {
@@ -112,23 +144,42 @@ public class CustomerController {
         return name;
     }
 
-    //BUSCAR CLIENTE POR CODIGO
-        @GetMapping("/full")
-        @Operation(summary = "Buscar cliente por codigo")
-        public Customer getByCode(@RequestParam ("code") String code){
-           Customer customer = customerRepository.findByCode(code);
-           List<CustomerProduct>products = customer.getProducts();
-           products.forEach(x->{
-               String productName=getProductName(x.getId());
-               x.setProductName(productName);
-             });
-           return customer;
+    /**
+     * Call Transaction Microservice and Find all transaction that belong to the
+     * account give
+     *
+     * @param iban account number of the customer
+     * @return All transaction that belong this account
+     */
+
+       // metodo que devuelve cliente con lista de transacciones por iban
+       private List<?> getTransactions(String iban) {
+           WebClient build = webClientBuilder.clientConnector(new ReactorClientHttpConnector(client))
+                   .baseUrl("http://localhost:8082/transaction")
+                   .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                   .build();
+
+           Optional<List<?>> transactionsOptional = Optional.ofNullable(build.method(HttpMethod.GET)
+                   .uri(uriBuilder -> uriBuilder
+                           .path("/customer/transactions")
+                           .queryParam("accountIban", iban)
+                           .build())
+                   .retrieve()
+                   .bodyToFlux(Object.class)
+                   .collectList()
+                   .block());
+
+           return transactionsOptional.orElse(Collections.emptyList());
        }
 
+       // da mensaje de en que puerto estoy
+       @Autowired
+       private Environment env;
 
-
-
-
+       @GetMapping("/check")
+    public String check(){
+           return "Hello you proerty value is:" + env.getProperty("custom.activeprofileName");
+       }
 
 
 

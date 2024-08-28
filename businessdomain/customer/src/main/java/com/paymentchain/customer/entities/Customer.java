@@ -21,6 +21,7 @@ public class Customer {
 
     @OneToMany(fetch = FetchType.LAZY,mappedBy = "customer",cascade=CascadeType.ALL,orphanRemoval = true)
     private List<CustomerProduct> products;
+
     @Transient
     private List<?> transactions;
 

@@ -39,12 +39,6 @@
     </dependencyManagement>
            
     <dependencies>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
         <!-- manage all realate to links on REST resources-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
